@@ -12,8 +12,11 @@ _start:
     mov edx, msg
     mov byte[edx+23],'X'
     call puts
-    mov edx,[msg+26]
+    mov edx,msg+26
     mov byte[edx],'@' 
+    mov edx,msg
+    call puts
+    
     ; --- FIN DE PROGRAMA ---
     mov eax, 1            ; Llamada sys_exit
 	xor ebx, ebx          ; return 0
