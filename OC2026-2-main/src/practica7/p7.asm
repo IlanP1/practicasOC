@@ -8,7 +8,7 @@ section .data
     negativo dd 0
     resultado dd 0
     decima dd 1
-    cant dd cant 0
+    cant dd 0
     nline db ln,0
     msg1 db ln,'Cadena = ', 0
     msg2 db ln,'Salida = ', 0
@@ -55,7 +55,7 @@ _start:
     captura:
             push ax
             push esi
-            mov cx,[lim]
+            mov ecx,[lim]
     .inic   call getch
             cmp al, ln
             je .fin
@@ -76,7 +76,7 @@ _start:
 
     borrar:
             push ax
-            cmp cx,[lim]
+            cmp ecx,[lim]
             je .limite 
             mov al,0x8
             call putchar    
@@ -86,7 +86,7 @@ _start:
             mov [esi],al
             mov al,0x8
             call putchar  
-            inc cx
+            inc ecx
  .limite    pop ax
             ret 
 
@@ -95,14 +95,17 @@ _start:
             push ecx
             push edx
             push esi
-.inicio     mov eax,[esi]
-            cmp eax,'-'
+            push ebx
+            mov ebx,0
+            mov eax,0
+.inicio     mov al,byte[esi]
+            cmp al,'-'
             je .ngtv
-            cmp eax,0
+            cmp al,0
             je .final
-            cmp eax,48
+            cmp al,48
             jb .sig2
-            cmp eax,57
+            cmp al,57
             ja .sig2
             jmp .digitos
 .ngtv       cmp dword[negativo],1
@@ -110,37 +113,26 @@ _start:
             jmp .sig2
 .negar      mov dword[negativo],1 
             jmp .sig2
-
 .sig2       inc esi
             jmp .inicio
-
-.digitos    push eax
-            inc dword[cant]
+.digitos    sub al,48
+            imul ebx,10
+            add  ebx,eax
             inc esi
-            mov eax,[esi]
-            cmp eax,48
-            jb .convatoi
-            cmp eax,57
-            ja .convatoi
+            mov al,byte[esi]
+            cmp al,48
+            jb .multneg
+            cmp al,57
+            ja .multneg
             jmp .digitos
-.convatoi   mov ecx,[cant]
-.inicio2    pop eax
-            sub eax,48
-            mul dword[decima]
-            add [resultado],eax
-            mov eax,10
-            mul dword[decima]
-            mov dword[decima],eax
-            loop .inicio2
+ .multneg   mov [resultado],ebx
             cmp dword[negativo],0
-            jne .multneg
-            jmp .final
-.multneg    mov eax,-1
+            je .final
+            mov eax,-1
             mul dword[resultado]
             mov dword[resultado],eax
-            jmp .final 
-
-.final      pop esi
+.final      pop ebx
+            pop esi
             pop edx
             pop ecx
             pop eax
@@ -153,35 +145,32 @@ _start:
                 push edx
                 push ebx
                 mov eax,[resultado]
-                
-                
-.convertir      div dword[decima]
+                cmp eax,0
+                jge .convertir
+                imul eax,-1
+.convertir      mov edx,0
+                div dword[decima]
                 add edx,'0'
                 push edx
                 inc dword[cant]
                 cmp eax,0
                 jne .convertir
-
                 mov eax,[resultado]
                 cmp dword[resultado],0
-                jb .negativ
+                jl .negativ
                 jmp .pasarC
 .negativ        mov ebx,'-'
                 push ebx
                 inc dword[cant]
                 jmp .pasarC
-                
-
 .pasarC         mov ecx,[cant]
                 mov edx,cadena
 .convert        pop eax
                 mov byte[edx],al
                 inc edx
                 loop .convert
+                mov byte[edx],0
                 jmp .fin2
-
-
-
 .fin2           pop ebx
                 pop edx
                 pop eax
