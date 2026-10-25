@@ -73,6 +73,7 @@ _start:
             inc edx
             loop .inic
     .fin    mov al,0
+            mov[edx],al
             call putchar
             pop edx
             pop ax
