@@ -40,6 +40,18 @@ _start:
     call puts
     mov edx, cadena
     call puts
+    
+    mov edx,nline
+    call puts
+    mov edx,cadena
+    call getche
+    mov byte[edx],al
+    call getche
+    mov byte[edx+1],al
+    mov edx,msg2
+    call puts
+    mov edx,cadena
+    call puts 
 
     jmp .fin_programa 
     
