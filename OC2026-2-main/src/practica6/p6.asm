@@ -21,6 +21,7 @@ _start:
     mov edx, msg1        
     call puts   
     mov edx,cadena
+    mov eax,[lim]
     call captura  
     mov edx,msg2    
     call puts
@@ -57,10 +58,13 @@ _start:
    
 
 
-    captura:
-            push ax
+     captura:
+            push eax
             push edx
-            mov cx,[lim]
+            push ecx
+            push ebx
+            mov ebx,eax
+            mov ecx,eax
     .inic   call getch
             cmp al, ln
             je .fin
@@ -75,13 +79,15 @@ _start:
     .fin    mov al,0
             mov[edx],al
             call putchar
+            pop ebx
+            pop ecx
             pop edx
-            pop ax
+            pop eax
             ret
 
     borrar:
-            push ax
-            cmp cx,[lim]
+            push eax
+            cmp ecx,ebx
             je .limite 
             mov al,0x8
             call putchar    
@@ -91,8 +97,8 @@ _start:
             mov [edx],al
             mov al,0x8
             call putchar  
-            inc cx
- .limite    pop ax
+            inc ecx
+ .limite    pop eax
             ret 
 
             mayusculas:
