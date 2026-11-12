@@ -1,5 +1,75 @@
 %include "../../lib/pc_io.inc"  	; incluir declaraciones de procedimiento externos
 								; que se encuentran en la biblioteca libpc_io.a
+%macro PROTOENTRADA 0
+	push ebp
+	mov ebp,esp
+%endmacro
+
+%macro PROTOSALIDA 0
+	mov esp,ebp
+	pop ebp
+%endmacro
+
+%macro WHILE 6
+    push ecx
+    push edx
+    push eax
+    mov edx,%2
+    mov ecx,%1
+%6  cmp ecx,edx
+    %3 .%5
+    %4
+    jmp %6 
+.%5 pop eax 
+    pop edx
+    pop ecx
+%endmacro
+
+%macro CUERPOMAX 0
+    push eax
+    push edx
+    mov eax,dword[ebp-4]
+    mov edx,dword[ebx+ecx*4]
+    cmp edx,eax
+    jg .cambiarMax
+    jmp .sig2
+
+.cambiarMax:
+    mov dword[ebp-4],edx
+.sig2:
+    inc ecx
+    pop edx
+    pop eax
+%endmacro
+
+%macro CUERPOMIN 0
+    push eax
+    push edx
+    mov eax,dword[ebp-4]
+    mov edx,dword[ebx+ecx*4]
+    cmp edx,eax
+    jl .cambiarMin
+    jmp .sig3
+
+.cambiarMin:
+    mov dword[ebp-4],edx
+.sig3:
+    inc ecx
+    pop edx
+    pop eax
+%endmacro
+
+%macro CUERPOSUMATORIA 0
+    push eax
+    push edx
+    mov eax,dword[ebp-4]
+    mov edx,dword[ebx+ecx*4]
+    add eax,edx
+    mov dword[ebp-4],eax
+    inc ecx
+    pop edx
+    pop eax
+%endmacro
 
 %macro FOR 4
     push ecx
@@ -15,26 +85,13 @@
 
 section	.text
 	global _startd       ;referencia para inicio de programa
-    global _imprimir     
+    global _imprimir   
+    global _minimo  
+    global _maximo
+    global _sumatoria
 	
 	
 _startd:                
-    push msg1       ;SEGUNDO PARAMETRO
-    push msg2       ;PRIMER PARAMETRO
-    call _imprimir  ;_imprimir(msg2,msg1)
-    add esp, 8      ;LIMPIA PARAMETROS DE LA FUNCION DE LA PILA
-
-    
-    push msg2       ;SEGUNDO PARAMETRO
-    push msg1       ;PRIMER PARAMETRO
-    call _imprimir  ;_imprimir(msg1,msg2)
-    add esp, 8      ;LIMPIA PARAMETROS DE LA FUNCION DE LA PILA
-   
-    ;FOR 3,msg1,puts,l1    ;LLAMADA/EXPANSION DE MACRO
-    ;FOR 2,msg2,puts,l2    ;LLAMADA/EXPANSION DE MACRO
-    
-	mov	eax, 1	    	; seleccionar llamada al sistema para fin de programa
-	int	0x80        	; llamada al sistema - fin de programa
 
     _imprimir:
         push ebp
@@ -53,8 +110,77 @@ _startd:
         mov esp, ebp       ;Restaurar el puntero de la pila (libera el espacio reservado para las variables locales)
         pop ebp
         ret
+	
+	_minimo:
+		PROTOENTRADA
+            sub esp,4
+            push ebx
+            push edx
+            push ecx
+            push esi
+            mov ebx,dword[ebp+8];arreglo
+            mov edx,dword[ebx];arreglo[0]
+            mov ecx,dword[ebp+12];len
+            mov dword[ebp-4],edx;maximo
+            mov esi,0;cont
+            WHILE esi,ecx,jge,CUERPOMIN,finalMin,cicloMin
+            pop esi
+            pop ecx
+            pop edx
+            pop ebx
+            mov eax,[ebp-4]
+            add esp,4
+            PROTOSALIDA
+            ret
 
-    
+
+
+        _maximo:
+            PROTOENTRADA
+            sub esp,4
+            push ebx
+            push edx
+            push ecx
+            push esi
+            mov ebx,dword[ebp+8];arreglo
+            mov edx,dword[ebx];arreglo[0]
+            mov ecx,dword[ebp+12];len
+            mov dword[ebp-4],edx;maximo
+            mov esi,0;cont
+            WHILE esi,ecx,jge,CUERPOMAX,finalMax,cicloMax
+            pop esi
+            pop ecx
+            pop edx
+            pop ebx
+            mov eax,[ebp-4]
+            add esp,4
+            PROTOSALIDA
+            ret
+
+        _sumatoria:
+            PROTOENTRADA
+            sub esp,4
+            push ebx
+            push edx
+            push ecx
+            push esi
+            mov ebx,dword[ebp+8];arreglo
+            mov edx,dword[ebx];arreglo[0]
+            mov ecx,dword[ebp+12];len
+            mov dword[ebp-4],0;resultado
+            mov esi,0;cont
+            WHILE esi,ecx,jge,CUERPOSUMATORIA,finalSum,cicloSum
+            pop esi
+            pop ecx
+            pop edx
+            pop ebx
+            mov eax,[ebp-4]
+            add esp,4
+            PROTOSALIDA
+            ret
+
+
+
 
 section	.data
     msg1 db  'Hola mundo',0xa,0 
